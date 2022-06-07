@@ -1,14 +1,51 @@
+import { GetServerSideProps } from 'next';
 import Head from 'next/head';
+import Image from 'next/image';
+import { SubscribeButton } from '../components/SubscribeButton';
+import styles from './home.module.scss';
+import { stripe } from '../services/stripe';
+import { setCurrency } from '../utils/setCurrency';
 
-export default function Home() {
+interface HomeProps {
+  product: {
+    priceId: string;
+    amount: number;
+  }
+}
+
+export default function Home({ product: { amount, priceId } }: HomeProps) {
+  // console.log(product)
   return (
     <>
       <Head>
-        <title>Ig.News</title>
+        <title>Home | Ig.News</title>
       </Head>
-      <h1>
-        Hello novamente
-      </h1>
+      <main className={styles.contentContainer}>
+        <section className={styles.hero}>
+          <span>👏 Hey, welcome</span>
+          <h1>News about the <span>React</span> world.</h1>
+          <p>
+            Get access to all the publications <br/>
+            <span>for {amount} moth</span>
+          </p>
+          <SubscribeButton priceId={priceId}/>
+        </section>
+        <Image src="/images/avatar.svg" alt="Girls coding" width={334} height={520} />
+      </main>
     </>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const price = await stripe.prices.retrieve('price_1L7tUwKglM8koJtGQOzxUFBG');
+
+  const product = {
+    priceId: price.id,
+    amount: setCurrency(price.unit_amount)
+  }
+  return {
+    props: {
+      product
+    }
+  }
 }
